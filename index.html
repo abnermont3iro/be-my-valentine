@@ -18,7 +18,6 @@
             transition: background 1s ease;
         }
 
-        /* Floating Hearts Layer */
         .bg-hearts {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 0; pointer-events: none;
@@ -64,7 +63,6 @@
         #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 20; }
         #noBtn { background-color: #f44336; color: white; position: fixed; z-index: 100; }
 
-        /* Envelope UI */
         .envelope-wrapper { cursor: pointer; text-align: center; z-index: 30; }
         .envelope {
             position: relative; width: 250px; height: 180px; background: #fdfdfd;
@@ -76,7 +74,7 @@
             border-top: 100px solid #f2f2f2;
         }
 
-        #musicToggle { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.5); border: none; padding: 10px; border-radius: 50%; z-index: 1000; cursor: pointer;}
+        #musicToggle { display: none; }
     </style>
 </head>
 <body>
@@ -100,12 +98,10 @@
     </div>
 
     <audio id="bgMusic" loop><source src="mood-swings.mp3" type="audio/mpeg"></audio>
-    <button id="musicToggle" onclick="toggleMusic()">🎵</button>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
     <script>
-        // Use window.onload to ensure elements exist before we touch them
         let noClickCount = 0;
         let isDodgeMode = false;
         
@@ -118,13 +114,12 @@
         ];
 
         const sadImages = [
-            "images/sad-1.jpeg", "images/sad-2.jpeg", "images/sad-3.jpeg", "images/sad-4.jpeg", "images/sad-5.jpeg"
+            "images/sad-1.jpeg", 
+            "images/sad-2.jpeg", 
+            "images/sad-3.jpeg", 
+            "images/sad-4.jpeg", 
+            "images/sad-5.jpeg"
         ];
-
-        function toggleMusic() {
-            const music = document.getElementById('bgMusic');
-            if (music.paused) { music.play(); } else { music.pause(); }
-        }
 
         function createHearts() {
             const container = document.getElementById('heartContainer');
@@ -144,10 +139,9 @@
         function openEnvelope() {
             document.getElementById('envelopeWrapper').style.display = 'none';
             document.getElementById('valentine-card').style.display = 'block';
-            document.getElementById('bgMusic').play().catch(e => console.log("Music blocked by browser"));
+            document.getElementById('bgMusic').play().catch(e => {});
             createHearts();
             
-            // Set initial button position
             const yesBtn = document.getElementById('yesBtn');
             const noBtn = document.getElementById('noBtn');
             const rect = yesBtn.getBoundingClientRect();
@@ -181,6 +175,7 @@
             const displayImg = document.getElementById('displayImg');
             const questionText = document.getElementById('questionText');
 
+            // CRITICAL FIX: Update UI based on the current click count
             if (noClickCount < messages.length) {
                 questionText.innerText = messages[noClickCount];
                 displayImg.src = sadImages[noClickCount];
@@ -190,8 +185,9 @@
 
             if (noClickCount === 4) { document.body.style.background = "#333"; }
 
+            // Movement logic
             if (noClickCount >= 5) {
-                isDodgeMode = true;
+                isDodgeMode = true; 
                 moveButtonRandomly();
             } else {
                 moveButtonRandomly();
@@ -200,11 +196,17 @@
 
         function celebrate() {
             document.body.style.background = "linear-gradient(135deg, #ffafbd, #ff5e62)";
-            document.getElementById('noBtn').style.display = 'none';
-            document.getElementById('valentine-card').innerHTML = `
-                <div class="img-container"><img class="main-img" src="images/happy-1.jpeg"></div>
-                <h1 style="font-size: 1.1rem; padding: 10px;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
-            `;
+            const displayImg = document.getElementById('displayImg');
+            const questionText = document.getElementById('questionText');
+            const noBtn = document.getElementById('noBtn');
+            const yesBtn = document.getElementById('yesBtn');
+
+            displayImg.src = "images/happy-1.jpeg"; 
+            questionText.innerText = "Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️";
+            
+            noBtn.style.display = 'none';
+            yesBtn.style.display = 'none';
+
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         }
     </script>

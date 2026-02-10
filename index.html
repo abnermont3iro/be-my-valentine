@@ -26,38 +26,55 @@
             100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
 
-        /* Card UI */
         #valentine-card {
             display: none; background: white; padding: 25px; border-radius: 20px;
-            width: 85%; max-width: 380px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 10;
+            width: 90%; max-width: 400px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 10; position: relative;
         }
 
-        .main-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
+        /* SQUARE PHOTO LOGIC */
+        .img-container {
+            width: 100%;
+            aspect-ratio: 1 / 1; /* Forces square shape */
+            margin-bottom: 15px;
+            overflow: hidden;
+            border-radius: 15px;
+            background-color: #f9f9f9; /* Light background for non-square source images */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .main-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; /* Shows the FULL image without cropping */
+            pointer-events: none; 
+        }
+
+        h1 { color: var(--accent-red); font-size: 1.3rem; margin-bottom: 20px; min-height: 3em; }
 
         .btn-container {
             display: flex; justify-content: center; align-items: center;
-            gap: 20px; min-height: 100px; margin-top: 10px;
-            position: relative; /* Essential for containing the Yes button */
+            gap: 20px; min-height: 120px; position: relative;
         }
 
         button {
             padding: 12px 25px; border: none; border-radius: 50px;
             font-size: 1rem; font-weight: bold; cursor: pointer;
-            transition: transform 0.2s ease;
         }
 
         #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 20; }
         
         #noBtn { 
             background-color: #f44336; color: white; 
-            position: relative; z-index: 19;
-            transition: transform 0.2s ease, top 0.2s ease, left 0.2s ease;
+            position: absolute; 
+            z-index: 19;
+            transition: all 0.3s ease;
         }
 
         #musicToggle { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.5); border: none; padding: 10px; border-radius: 50%; z-index: 100; }
         
-        /* Envelope UI */
         .envelope-wrapper { cursor: pointer; text-align: center; z-index: 30; }
         .envelope {
             position: relative; width: 250px; height: 180px; background: #fdfdfd;
@@ -81,9 +98,11 @@
     </div>
 
     <div id="valentine-card">
-        <img id="displayImg" class="main-img" src="images/us-main.jpeg">
-        <h1 id="questionText" style="color:var(--accent-red); font-size:1.4rem;">Will you be my Valentine?</h1>
-        <div class="btn-container">
+        <div class="img-container">
+            <img id="displayImg" class="main-img" src="images/us-main.jpeg">
+        </div>
+        <h1 id="questionText">Will you be my Valentine?</h1>
+        <div class="btn-container" id="btnContainer">
             <button id="yesBtn" onclick="celebrate()">Yes</button>
             <button id="noBtn" onclick="handleNo()" onmouseover="moveNoButton()">No</button>
         </div>
@@ -99,9 +118,8 @@
         const noBtn = document.getElementById('noBtn');
         const yesBtn = document.getElementById('yesBtn');
         const card = document.getElementById('valentine-card');
+        const container = document.getElementById('btnContainer');
         let noClickCount = 0;
-        let noScale = 1;
-        let yesScale = 1;
 
         const messages = [
             "Ain't no way you just said no... Try again...",
@@ -120,68 +138,67 @@
             card.style.display = 'block';
             music.play().catch(() => {});
             createHearts();
+            // Positioning No button
+            noBtn.style.left = (yesBtn.offsetLeft + 100) + 'px';
+            noBtn.style.top = yesBtn.offsetTop + 'px';
         }
 
         function createHearts() {
-            const container = document.getElementById('heartBg');
+            const bg = document.getElementById('heartBg');
             for(let i=0; i<15; i++) {
                 const heart = document.createElement('div');
                 heart.className = 'heart'; heart.innerHTML = '❤️';
                 heart.style.left = Math.random() * 100 + 'vw';
                 heart.style.animationDelay = Math.random() * 5 + 's';
-                container.appendChild(heart);
+                bg.appendChild(heart);
             }
         }
 
         function toggleMusic() { return music.paused ? music.play() : music.pause(); }
 
         function moveNoButton() {
-            // First one stays put. Subsequent ones move.
-            if (noClickCount === 0) return;
-            
-            // Randomize position across the entire screen
-            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
-            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
-            
-            noBtn.style.position = 'fixed';
-            noBtn.style.left = x + 'px';
-            noBtn.style.top = y + 'px';
+            if (noClickCount >= 4) {
+                // AGGRESSIVE DODGE - WARPS ANYWHERE ON SCREEN
+                noBtn.style.position = 'fixed';
+                noBtn.style.transition = 'none'; 
+                const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+                const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+                noBtn.style.left = x + 'px';
+                noBtn.style.top = y + 'px';
+            } else {
+                // NORMAL TELEPORT - STAYS WITHIN CARD
+                const newX = Math.random() * (container.offsetWidth - noBtn.offsetWidth);
+                const newY = Math.random() * (container.offsetHeight - noBtn.offsetHeight);
+                noBtn.style.left = newX + 'px';
+                noBtn.style.top = newY + 'px';
+            }
         }
 
         function handleNo() {
             const img = document.getElementById('displayImg');
             const title = document.getElementById('questionText');
 
-            // Text and Image update
             if (noClickCount < messages.length) {
                 title.innerText = messages[noClickCount];
                 img.src = sadImages[noClickCount];
             }
 
-            // Size updates
-            noScale -= 0.15;
-            yesScale += 0.45;
-            
-            if (noClickCount >= 4) {
-                noBtn.style.display = 'none';
-                document.body.style.background = "#222"; 
-            } else {
-                noBtn.style.transform = `scale(${noScale})`;
-                yesBtn.style.transform = `scale(${yesScale})`;
-                // Immediately move it after clicking "No" so she can't click it twice in the same spot
-                moveNoButton();
+            if (noClickCount === 3) {
+                document.body.style.background = "#333"; 
             }
             
+            moveNoButton();
             noClickCount++;
         }
 
         function celebrate() {
             document.body.style.background = "linear-gradient(135deg, #ffafbd, #ff5e62)";
             card.innerHTML = `
-                <img class="main-img" src="images/happy-1.jpeg">
+                <div class="img-container">
+                    <img class="main-img" src="images/happy-1.jpeg">
+                </div>
                 <h1 style="font-size: 1.1rem; padding: 10px;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
             `;
-            // Trigger confetti
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         }
     </script>

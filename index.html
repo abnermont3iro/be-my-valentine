@@ -22,6 +22,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: background 1s ease;
         }
 
         /* Floating Hearts Background */
@@ -111,14 +112,14 @@
             margin-bottom: 15px;
         }
 
-        h1 { color: var(--accent-red); font-size: 1.5rem; margin-bottom: 20px; }
+        h1 { color: var(--accent-red); font-size: 1.4rem; margin-bottom: 20px; line-height: 1.4; }
 
         .btn-container {
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 15px;
-            min-height: 120px;
+            min-height: 150px;
         }
 
         button {
@@ -131,7 +132,7 @@
             transition: all 0.2s ease;
         }
 
-        #yesBtn { background-color: #4CAF50; color: white; }
+        #yesBtn { background-color: #4CAF50; color: white; z-index: 20; }
         #noBtn { background-color: #f44336; color: white; }
 
         #musicToggle {
@@ -178,19 +179,22 @@
         let yesScale = 1;
         let noClickCount = 0;
 
-        // Image Cycle for the "No" button
+        // Custom sequence
+        const messages = [
+            "Ain't no way you just said no... Try again...",
+            "Stop horsin' around...",
+            "Are you drunk? Pick me bruh...",
+            "You have to be kidding me rn...",
+            "This is the end... last chance..."
+        ];
+
+        // Specific image filenames
         const sadImages = [
             "images/sad-1.jpg",
             "images/sad-2.jpg",
-            "images/sad-3.jpg"
-        ];
-
-        const messages = [
-            "Are you sure? 🥺",
-            "Really sure?? 😭",
-            "Think again... 🌹",
-            "I'll be so sad!",
-            "Give it a chance!"
+            "images/sad-3.jpg",
+            "images/sad-4.jpg",
+            "images/sad-5.jpg"
         ];
 
         function createHearts() {
@@ -201,7 +205,6 @@
                 heart.innerHTML = '❤️';
                 heart.style.left = Math.random() * 100 + 'vw';
                 heart.style.animationDelay = Math.random() * 5 + 's';
-                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
                 container.appendChild(heart);
             }
         }
@@ -214,7 +217,8 @@
         function openEnvelope() {
             document.getElementById('envelopeWrapper').style.display = 'none';
             document.getElementById('valentine-card').style.display = 'block';
-            music.play().catch(() => console.log("Music waiting for interaction."));
+            music.load();
+            music.play().catch(() => console.log("Music blocked. Click 🎵."));
         }
 
         function handleNo() {
@@ -222,45 +226,53 @@
             const yesBtn = document.getElementById('yesBtn');
             const img = document.getElementById('displayImg');
             const title = document.getElementById('questionText');
+            const card = document.getElementById('valentine-card');
 
-            noScale -= 0.15;
-            yesScale += 0.2;
+            if (noClickCount < messages.length) {
+                title.innerText = messages[noClickCount];
+                img.src = sadImages[noClickCount];
+            }
+
+            noScale -= 0.18;
+            yesScale += 0.45;
             
-            if (noScale <= 0.2) {
+            if (noClickCount >= 4) {
                 noBtn.style.display = 'none';
+                document.body.style.background = "#222"; 
             } else {
                 noBtn.style.transform = `scale(${noScale})`;
                 yesBtn.style.transform = `scale(${yesScale})`;
             }
 
-            img.src = sadImages[noClickCount % sadImages.length];
-            title.innerText = messages[noClickCount % messages.length];
+            card.style.animation = 'none';
+            setTimeout(() => card.style.animation = 'popIn 0.3s cubic-bezier(.36,.07,.19,.97) both', 10);
+            
             noClickCount++;
         }
 
         function celebrate() {
+            document.body.style.background = "linear-gradient(135deg, #ffafbd, #ff5e62)";
             const card = document.getElementById('valentine-card');
             card.innerHTML = `
-                <img class="main-img" src="images/final-happy.jpg">
-                <h1>Yay! See you on the 14th! ❤️</h1>
+                <img class="main-img" src="images/happy-1.jpg">
+                <h1 style="font-size: 1.2rem;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
             `;
 
-            // Confetti effect
             var end = Date.now() + (15 * 1000);
             (function frame() {
                 confetti({
-                    particleCount: 3,
+                    particleCount: 5,
                     angle: 60,
                     spread: 55,
                     origin: { x: 0 },
-                    colors: ['#ffafbd', '#ff5e62']
+                    colors: ['#ffafbd', '#ff5e62', '#ffffff']
                 });
                 confetti({
-                    particleCount: 3,
+                    particleCount: 5,
                     angle: 120,
                     spread: 55,
                     origin: { x: 1 },
-                    colors: ['#ffafbd', '#ff5e62']
+                    colors: ['#ffafbd', '#ff5e62', '#ffffff']
                 });
                 if (Date.now() < end) {
                     requestAnimationFrame(frame);

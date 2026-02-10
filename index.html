@@ -18,31 +18,6 @@
             transition: background 1s ease;
         }
 
-        /* FLOATING HEARTS ANIMATION */
-        .bg-hearts {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
-
-        .floating-heart {
-            position: absolute;
-            bottom: -50px;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 20px;
-            user-select: none;
-            animation: floatUp linear infinite;
-        }
-
-        @keyframes floatUp {
-            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(-110vh) rotate(360deg); opacity: 0; }
-        }
-
         /* Valentine Card Styling */
         #valentine-card {
             display: none; background: white; padding: 25px; border-radius: 20px;
@@ -50,29 +25,48 @@
             box-shadow: 0 20px 50px rgba(0,0,0,0.2); z-index: 10; position: relative;
         }
 
+        /* Square Image Container */
         .img-container {
-            width: 100%; aspect-ratio: 1 / 1; margin-bottom: 15px;
-            overflow: hidden; border-radius: 15px; background-color: #f9f9f9; 
-            display: flex; align-items: center; justify-content: center;
+            width: 100%;
+            aspect-ratio: 1 / 1; 
+            margin-bottom: 15px;
+            overflow: hidden;
+            border-radius: 15px;
+            background-color: #f9f9f9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .main-img { width: 100%; height: 100%; object-fit: contain; }
+        .main-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+        }
 
         h1 { color: var(--accent-red); font-size: 1.3rem; margin-bottom: 20px; min-height: 3.5em; }
 
+        /* Vertical Button Stack */
         .btn-container {
-            display: flex; flex-direction: column; align-items: center;
-            gap: 15px; min-height: 120px;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            gap: 15px; 
+            min-height: 120px;
         }
 
         button {
             padding: 12px 40px; border: none; border-radius: 50px;
             font-size: 1rem; font-weight: bold; cursor: pointer;
-            width: 200px; z-index: 20;
+            width: 200px; transition: transform 0.2s;
         }
 
-        #yesBtn { background-color: #4CAF50; color: white; position: relative; }
-        #noBtn { background-color: #f44336; color: white; position: fixed; z-index: 100; }
+        #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 20; }
+        
+        #noBtn { 
+            background-color: #f44336; color: white; 
+            position: fixed; z-index: 100;
+        }
 
         /* Envelope UI */
         .envelope-wrapper { cursor: pointer; text-align: center; z-index: 30; }
@@ -91,8 +85,6 @@
     </style>
 </head>
 <body>
-
-    <div class="bg-hearts" id="heartContainer"></div>
 
     <div class="envelope-wrapper" id="envelopeWrapper" onclick="openEnvelope()">
         <div class="envelope"></div>
@@ -135,31 +127,19 @@
         ];
 
         const sadImages = [
-            "images/sad-1.jpeg", "images/sad-2.jpeg", "images/sad-3.jpeg", "images/sad-4.jpeg", "images/sad-5.jpeg"
+            "images/sad-1.jpeg", 
+            "images/sad-2.jpeg", 
+            "images/sad-3.jpeg", 
+            "images/sad-4.jpeg", 
+            "images/sad-5.jpeg"
         ];
-
-        // Background Hearts Logic
-        function createHearts() {
-            const container = document.getElementById('heartContainer');
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.classList.add('floating-heart');
-                heart.innerHTML = '❤️';
-                heart.style.left = Math.random() * 100 + 'vw';
-                heart.style.animationDuration = (Math.random() * 3 + 4) + 's';
-                heart.style.opacity = Math.random();
-                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
-                container.appendChild(heart);
-                setTimeout(() => heart.remove(), 7000);
-            }, 400);
-        }
 
         function openEnvelope() {
             document.getElementById('envelopeWrapper').style.display = 'none';
             card.style.display = 'block';
             music.play().catch(() => {});
-            createHearts(); // Start hearts when envelope opens
             
+            // Initial Stacked Position
             const rect = yesBtn.getBoundingClientRect();
             noBtn.style.left = rect.left + 'px';
             noBtn.style.top = (rect.bottom + 15) + 'px';
@@ -168,7 +148,9 @@
         function toggleMusic() { return music.paused ? music.play() : music.pause(); }
 
         function handleHover() {
-            if (isDodgeMode) moveButtonRandomly();
+            if (isDodgeMode) {
+                moveButtonRandomly();
+            }
         }
 
         function moveButtonRandomly() {
@@ -180,20 +162,34 @@
             while (!foundSpot) {
                 newX = Math.random() * (window.innerWidth - noBtn.offsetWidth - 20);
                 newY = Math.random() * (window.innerHeight - noBtn.offsetHeight - 20);
-                const overlap = (newX > cardRect.left - padding && newX < cardRect.right + padding && newY > cardRect.top - padding && newY < cardRect.bottom + padding);
+                
+                const overlap = (
+                    newX > cardRect.left - padding && newX < cardRect.right + padding &&
+                    newY > cardRect.top - padding && newY < cardRect.bottom + padding
+                );
+
                 if (!overlap) foundSpot = true;
             }
+
             noBtn.style.left = newX + 'px';
             noBtn.style.top = newY + 'px';
         }
 
         function handleNo() {
+            // Update Image and Text BEFORE incrementing count for proper indexing
             if (noClickCount < messages.length) {
                 questionText.innerText = messages[noClickCount];
                 displayImg.src = sadImages[noClickCount];
             }
+
             noClickCount++;
-            if (noClickCount === 4) document.body.style.background = "#333";
+
+            // Darken screen on 4th click
+            if (noClickCount === 4) {
+                document.body.style.background = "#333";
+            }
+
+            // Dodge logic starts AFTER 5th click is made
             if (noClickCount >= 5) {
                 isDodgeMode = true; 
                 moveButtonRandomly();
@@ -205,7 +201,9 @@
         function celebrate() {
             document.body.style.background = "linear-gradient(135deg, #ffafbd, #ff5e62)";
             card.innerHTML = `
-                <div class="img-container"><img class="main-img" src="images/happy-1.jpeg"></div>
+                <div class="img-container">
+                    <img class="main-img" src="images/happy-1.jpeg">
+                </div>
                 <h1 style="font-size: 1.1rem; padding: 10px;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
             `;
             noBtn.style.display = 'none';

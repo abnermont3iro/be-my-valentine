@@ -58,7 +58,6 @@
             background-color: #f44336; color: white; 
             position: fixed; 
             z-index: 19;
-            /* No transition so the warp is instant on the final stage */
         }
 
         #musicToggle { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.5); border: none; padding: 10px; border-radius: 50%; z-index: 100; }
@@ -146,9 +145,9 @@
 
         function toggleMusic() { return music.paused ? music.play() : music.pause(); }
 
-        // DODGE LOGIC: Starts only when we reach the 5th message (noClickCount = 4)
+        // DODGE LOGIC: Starts ONLY after the 5th click is made
         function handleHover() {
-            if (noClickCount >= 4) {
+            if (noClickCount >= 5) {
                 warpButton();
             }
         }
@@ -164,32 +163,35 @@
             const img = document.getElementById('displayImg');
             const title = document.getElementById('questionText');
 
+            // Update Text and Image
             if (noClickCount < messages.length) {
                 title.innerText = messages[noClickCount];
                 img.src = sadImages[noClickCount];
             }
 
+            // Darken background on 4th click (preparing for final message)
             if (noClickCount === 3) {
                 document.body.style.background = "#333"; 
             }
 
-            // Move to a static spot outside the card for the first 4 clicks
-            if (noClickCount < 4) {
+            // STATIC REPOSITIONING for first 5 clicks
+            if (noClickCount < 5) {
                 let randomX, randomY;
                 const cardRect = card.getBoundingClientRect();
 
+                // Ensure it lands OUTSIDE the card
                 do {
                     randomX = Math.random() * (window.innerWidth - noBtn.offsetWidth);
                     randomY = Math.random() * (window.innerHeight - noBtn.offsetHeight);
                 } while (
-                    randomX > cardRect.left - 50 && randomX < cardRect.right + 50 &&
-                    randomY > cardRect.top - 50 && randomY < cardRect.bottom + 50
+                    randomX > cardRect.left - 40 && randomX < cardRect.right + 40 &&
+                    randomY > cardRect.top - 40 && randomY < cardRect.bottom + 40
                 );
 
                 noBtn.style.left = randomX + 'px';
                 noBtn.style.top = randomY + 'px';
             } else {
-                // If they are on the 5th message, hover/click triggers the dodge
+                // Once 5 clicks are done, the dodge begins
                 warpButton();
             }
             

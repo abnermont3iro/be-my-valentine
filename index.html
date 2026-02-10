@@ -12,31 +12,44 @@
 
         body, html {
             margin: 0; padding: 0; height: 100%; width: 100%;
-            overflow: hidden; font-family: 'Segoe UI', sans-serif;
+            overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: linear-gradient(135deg, var(--primary-pink), var(--accent-red));
             display: flex; align-items: center; justify-content: center;
+            transition: background 1s ease;
         }
 
+        /* Valentine Card Styling */
         #valentine-card {
             display: none; background: white; padding: 25px; border-radius: 20px;
             width: 90%; max-width: 400px; text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.2); z-index: 10; position: relative;
         }
 
+        /* SQUARE PHOTO LOGIC */
         .img-container {
-            width: 100%; aspect-ratio: 1 / 1; margin-bottom: 15px;
-            overflow: hidden; border-radius: 15px; background: #f9f9f9;
-            display: flex; align-items: center; justify-content: center;
+            width: 100%;
+            aspect-ratio: 1 / 1; 
+            margin-bottom: 15px;
+            overflow: hidden;
+            border-radius: 15px;
+            background-color: #f9f9f9; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .main-img { width: 100%; height: 100%; object-fit: contain; }
+        .main-img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; /* Shows FULL image without cropping */
+        }
 
         h1 { color: var(--accent-red); font-size: 1.3rem; margin-bottom: 20px; min-height: 3.5em; }
 
-        /* STACKED BUTTONS CSS */
+        /* BUTTON STACKING */
         .btn-container {
             display: flex; 
-            flex-direction: column; /* Stacks them vertically */
+            flex-direction: column; 
             align-items: center;
             gap: 15px; 
             min-height: 120px;
@@ -45,7 +58,7 @@
         button {
             padding: 12px 40px; border: none; border-radius: 50px;
             font-size: 1rem; font-weight: bold; cursor: pointer;
-            width: 200px; /* Uniform width for stacking look */
+            width: 200px; transition: transform 0.2s;
         }
 
         #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 20; }
@@ -55,16 +68,20 @@
             position: fixed; z-index: 100;
         }
 
+        /* Envelope UI */
         .envelope-wrapper { cursor: pointer; text-align: center; z-index: 30; }
         .envelope {
             position: relative; width: 250px; height: 180px; background: #fdfdfd;
             border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
         .envelope::before {
             content: ''; position: absolute; top: 0; left: 0;
             border-left: 125px solid transparent; border-right: 125px solid transparent;
             border-top: 100px solid #f2f2f2;
         }
+
+        #musicToggle { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.5); border: none; padding: 10px; border-radius: 50%; z-index: 100; }
     </style>
 </head>
 <body>
@@ -86,6 +103,7 @@
     </div>
 
     <audio id="bgMusic" loop><source src="mood-swings.mp3" type="audio/mpeg"></audio>
+    <button id="musicToggle" onclick="toggleMusic()">🎵</button>
 
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     
@@ -95,92 +113,10 @@
         const card = document.getElementById('valentine-card');
         const displayImg = document.getElementById('displayImg');
         const questionText = document.getElementById('questionText');
+        const music = document.getElementById('bgMusic');
+        
         let noClickCount = 0;
         let isDodgeMode = false;
 
         const messages = [
-            "Ain't no way you just said no... Try again...",
-            "Stop horsin' around...",
-            "Are you drunk? Pick me bruh...",
-            "You have to be kidding me rn...",
-            "This is the end... last chance..."
-        ];
-
-        const sadImages = [
-            "images/sad-1.jpeg", "images/sad-2.jpeg", "images/sad-3.jpeg", "images/sad-4.jpeg", "images/sad-5.jpeg"
-        ];
-
-        function openEnvelope() {
-            document.getElementById('envelopeWrapper').style.display = 'none';
-            card.style.display = 'block';
-            document.getElementById('bgMusic').play().catch(() => {});
-            
-            // INITIAL STACKED POSITION
-            const rect = yesBtn.getBoundingClientRect();
-            // Centers the No button 60px below the Yes button
-            noBtn.style.left = rect.left + 'px';
-            noBtn.style.top = (rect.bottom + 15) + 'px';
-        }
-
-        function handleHover() {
-            if (isDodgeMode) {
-                moveButtonRandomly();
-            }
-        }
-
-        function moveButtonRandomly() {
-            const cardRect = card.getBoundingClientRect();
-            let newX, newY;
-            const padding = 60;
-
-            let foundSpot = false;
-            while (!foundSpot) {
-                newX = Math.random() * (window.innerWidth - noBtn.offsetWidth - 20);
-                newY = Math.random() * (window.innerHeight - noBtn.offsetHeight - 20);
-                
-                const overlap = (
-                    newX > cardRect.left - padding && newX < cardRect.right + padding &&
-                    newY > cardRect.top - padding && newY < cardRect.bottom + padding
-                );
-
-                if (!overlap) foundSpot = true;
-            }
-
-            noBtn.style.left = newX + 'px';
-            noBtn.style.top = newY + 'px';
-        }
-
-        function handleNo() {
-            noClickCount++;
-
-            if (noClickCount <= 5) {
-                questionText.innerText = messages[noClickCount - 1];
-                displayImg.src = sadImages[noClickCount - 1];
-            }
-
-            if (noClickCount === 5) {
-                isDodgeMode = true; 
-                moveButtonRandomly(); 
-            } else if (noClickCount < 5) {
-                moveButtonRandomly(); 
-            } else {
-                moveButtonRandomly(); 
-            }
-
-            if (noClickCount === 4) {
-                document.body.style.background = "#333";
-            }
-        }
-
-        function celebrate() {
-            document.body.style.background = "linear-gradient(135deg, #ffafbd, #ff5e62)";
-            card.innerHTML = `
-                <div class="img-container"><img class="main-img" src="images/happy-1.jpeg"></div>
-                <h1 style="font-size: 1.1rem; padding: 10px;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
-            `;
-            noBtn.style.display = 'none';
-            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
-        }
-    </script>
-</body>
-</html>
+            "Ain't no way you just said no...

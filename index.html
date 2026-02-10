@@ -25,7 +25,6 @@
             transition: background 1s ease;
         }
 
-        /* Floating Hearts Background */
         .bg-hearts {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -45,7 +44,6 @@
             100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
 
-        /* Envelope Styling */
         .envelope-wrapper {
             cursor: pointer;
             transition: transform 0.3s;
@@ -53,8 +51,6 @@
             flex-direction: column;
             align-items: center;
         }
-
-        .envelope-wrapper:hover { transform: scale(1.05); }
 
         .envelope {
             position: relative;
@@ -73,19 +69,9 @@
             border-left: 125px solid transparent;
             border-right: 125px solid transparent;
             border-top: 100px solid #f2f2f2;
-            transform-origin: top;
             z-index: 3;
         }
 
-        .mail-label {
-            margin-top: 20px;
-            color: white;
-            font-weight: bold;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            font-size: 1.2rem;
-        }
-
-        /* The Card */
         #valentine-card {
             display: none;
             background: white;
@@ -95,13 +81,8 @@
             max-width: 380px;
             text-align: center;
             box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-            animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 10;
-        }
-
-        @keyframes popIn {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            position: relative;
         }
 
         .main-img {
@@ -110,16 +91,17 @@
             object-fit: cover;
             border-radius: 15px;
             margin-bottom: 15px;
+            pointer-events: none; /* Prevents button from getting stuck behind image */
         }
 
-        h1 { color: var(--accent-red); font-size: 1.4rem; margin-bottom: 20px; line-height: 1.4; }
+        h1 { color: var(--accent-red); font-size: 1.4rem; margin-bottom: 20px; }
 
         .btn-container {
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
             min-height: 150px;
+            position: relative;
         }
 
         button {
@@ -129,11 +111,18 @@
             font-size: 1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: all 0.2s ease;
+            transition: transform 0.2s ease;
         }
 
-        #yesBtn { background-color: #4CAF50; color: white; z-index: 20; }
-        #noBtn { background-color: #f44336; color: white; }
+        #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 11; }
+        
+        #noBtn { 
+            background-color: #f44336; 
+            color: white; 
+            position: absolute; /* Allows for random movement */
+            z-index: 12;
+            transition: all 0.2s ease;
+        }
 
         #musicToggle {
             position: fixed;
@@ -143,7 +132,6 @@
             border: none;
             padding: 10px;
             border-radius: 50%;
-            cursor: pointer;
             z-index: 100;
         }
     </style>
@@ -154,15 +142,15 @@
 
     <div class="envelope-wrapper" id="envelopeWrapper" onclick="openEnvelope()">
         <div class="envelope"></div>
-        <div class="mail-label">You've got mail! 💌</div>
+        <div class="mail-label" style="margin-top:20px; color:white; font-weight:bold;">You've got mail! 💌</div>
     </div>
 
     <div id="valentine-card">
-        <img id="displayImg" class="main-img" src="images/us-main.jpg" alt="Photo of us">
+        <img id="displayImg" class="main-img" src="images/us-main.jpeg" alt="Us">
         <h1 id="questionText">Will you be my Valentine?</h1>
-        <div class="btn-container">
+        <div class="btn-container" id="btnContainer">
             <button id="yesBtn" onclick="celebrate()">Yes</button>
-            <button id="noBtn" onclick="handleNo()">No</button>
+            <button id="noBtn" onmouseover="moveNoButton()" onclick="handleNo()">No</button>
         </div>
     </div>
 
@@ -175,11 +163,13 @@
     
     <script>
         const music = document.getElementById('bgMusic');
+        const noBtn = document.getElementById('noBtn');
+        const yesBtn = document.getElementById('yesBtn');
+        const card = document.getElementById('valentine-card');
         let noScale = 1;
         let yesScale = 1;
         let noClickCount = 0;
 
-        // Custom sequence
         const messages = [
             "Ain't no way you just said no... Try again...",
             "Stop horsin' around...",
@@ -188,7 +178,7 @@
             "This is the end... last chance..."
         ];
 
-        // Specific image filenames
+        // Updated to .jpeg
         const sadImages = [
             "images/sad-1.jpeg",
             "images/sad-2.jpeg",
@@ -216,25 +206,46 @@
 
         function openEnvelope() {
             document.getElementById('envelopeWrapper').style.display = 'none';
-            document.getElementById('valentine-card').style.display = 'block';
+            card.style.display = 'block';
             music.load();
-            music.play().catch(() => console.log("Music blocked. Click 🎵."));
+            music.play().catch(() => {});
+        }
+
+        // Logic to move the No button randomly within the viewport but away from the card
+        function moveNoButton() {
+            if (noClickCount >= 5) return; // Stop moving if it's already hidden
+
+            const padding = 20;
+            const maxX = window.innerWidth - noBtn.offsetWidth - padding;
+            const maxY = window.innerHeight - noBtn.offsetHeight - padding;
+
+            let randomX = Math.random() * maxX;
+            let randomY = Math.random() * maxY;
+
+            // Simple check to prevent it from overlapping the center card
+            const cardRect = card.getBoundingClientRect();
+            if (randomX > cardRect.left - 50 && randomX < cardRect.right + 50 &&
+                randomY > cardRect.top - 50 && randomY < cardRect.bottom + 50) {
+                randomX = padding; // Move to corner if it hits the card
+                randomY = padding;
+            }
+
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
         }
 
         function handleNo() {
-            const noBtn = document.getElementById('noBtn');
-            const yesBtn = document.getElementById('yesBtn');
             const img = document.getElementById('displayImg');
             const title = document.getElementById('questionText');
-            const card = document.getElementById('valentine-card');
 
             if (noClickCount < messages.length) {
                 title.innerText = messages[noClickCount];
                 img.src = sadImages[noClickCount];
             }
 
-            noScale -= 0.18;
-            yesScale += 0.45;
+            noScale -= 0.15;
+            yesScale += 0.4;
             
             if (noClickCount >= 4) {
                 noBtn.style.display = 'none';
@@ -242,41 +253,24 @@
             } else {
                 noBtn.style.transform = `scale(${noScale})`;
                 yesBtn.style.transform = `scale(${yesScale})`;
+                moveNoButton(); // Move it again on click
             }
-
-            card.style.animation = 'none';
-            setTimeout(() => card.style.animation = 'popIn 0.3s cubic-bezier(.36,.07,.19,.97) both', 10);
             
             noClickCount++;
         }
 
         function celebrate() {
             document.body.style.background = "linear-gradient(135deg, #ffafbd, #ff5e62)";
-            const card = document.getElementById('valentine-card');
             card.innerHTML = `
                 <img class="main-img" src="images/happy-1.jpeg">
-                <h1 style="font-size: 1.2rem;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
+                <h1 style="font-size: 1.1rem; padding: 10px;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
             `;
 
-            var end = Date.now() + (15 * 1000);
+            var end = Date.now() + (10 * 1000);
             (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: ['#ffafbd', '#ff5e62', '#ffffff']
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: ['#ffafbd', '#ff5e62', '#ffffff']
-                });
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ffafbd', '#ff5e62'] });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ffafbd', '#ff5e62'] });
+                if (Date.now() < end) requestAnimationFrame(frame);
             }());
         }
     </script>

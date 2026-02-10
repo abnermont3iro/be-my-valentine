@@ -26,8 +26,39 @@
             100% { transform: translateY(-10vh) rotate(360deg); opacity: 0; }
         }
 
+        /* Card UI */
+        #valentine-card {
+            display: none; background: white; padding: 25px; border-radius: 20px;
+            width: 85%; max-width: 380px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 10;
+        }
+
+        .main-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
+
+        .btn-container {
+            display: flex; justify-content: center; align-items: center;
+            gap: 20px; min-height: 100px; margin-top: 10px;
+            position: relative; /* Essential for containing the Yes button */
+        }
+
+        button {
+            padding: 12px 25px; border: none; border-radius: 50px;
+            font-size: 1rem; font-weight: bold; cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 20; }
+        
+        #noBtn { 
+            background-color: #f44336; color: white; 
+            position: relative; z-index: 19;
+            transition: transform 0.2s ease, top 0.2s ease, left 0.2s ease;
+        }
+
+        #musicToggle { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.5); border: none; padding: 10px; border-radius: 50%; z-index: 100; }
+        
         /* Envelope UI */
-        .envelope-wrapper { cursor: pointer; text-align: center; }
+        .envelope-wrapper { cursor: pointer; text-align: center; z-index: 30; }
         .envelope {
             position: relative; width: 250px; height: 180px; background: #fdfdfd;
             border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
@@ -38,31 +69,6 @@
             border-left: 125px solid transparent; border-right: 125px solid transparent;
             border-top: 100px solid #f2f2f2;
         }
-
-        /* Card UI */
-        #valentine-card {
-            display: none; background: white; padding: 25px; border-radius: 20px;
-            width: 85%; max-width: 380px; text-align: center;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.3); z-index: 10; position: relative;
-        }
-
-        .main-img { width: 100%; height: 250px; object-fit: cover; border-radius: 15px; margin-bottom: 15px; }
-
-        .btn-container {
-            display: flex; justify-content: center; align-items: center;
-            gap: 20px; min-height: 150px; position: relative;
-        }
-
-        button {
-            padding: 12px 25px; border: none; border-radius: 50px;
-            font-size: 1rem; font-weight: bold; cursor: pointer;
-            transition: transform 0.2s ease, left 0.3s ease, top 0.3s ease;
-        }
-
-        #yesBtn { background-color: #4CAF50; color: white; position: relative; z-index: 15; }
-        #noBtn { background-color: #f44336; color: white; position: relative; z-index: 14; }
-
-        #musicToggle { position: fixed; bottom: 20px; right: 20px; background: rgba(255,255,255,0.5); border: none; padding: 10px; border-radius: 50%; z-index: 100; }
     </style>
 </head>
 <body>
@@ -77,9 +83,9 @@
     <div id="valentine-card">
         <img id="displayImg" class="main-img" src="images/us-main.jpeg">
         <h1 id="questionText" style="color:var(--accent-red); font-size:1.4rem;">Will you be my Valentine?</h1>
-        <div class="btn-container" id="btnContainer">
+        <div class="btn-container">
             <button id="yesBtn" onclick="celebrate()">Yes</button>
-            <button id="noBtn" onmouseover="moveNoButton()" onclick="handleNo()">No</button>
+            <button id="noBtn" onclick="handleNo()" onmouseover="moveNoButton()">No</button>
         </div>
     </div>
 
@@ -109,9 +115,16 @@
             "images/sad-1.jpeg", "images/sad-2.jpeg", "images/sad-3.jpeg", "images/sad-4.jpeg", "images/sad-5.jpeg"
         ];
 
+        function openEnvelope() {
+            document.getElementById('envelopeWrapper').style.display = 'none';
+            card.style.display = 'block';
+            music.play().catch(() => {});
+            createHearts();
+        }
+
         function createHearts() {
             const container = document.getElementById('heartBg');
-            for(let i=0; i<25; i++) {
+            for(let i=0; i<15; i++) {
                 const heart = document.createElement('div');
                 heart.className = 'heart'; heart.innerHTML = '❤️';
                 heart.style.left = Math.random() * 100 + 'vw';
@@ -119,55 +132,35 @@
                 container.appendChild(heart);
             }
         }
-        createHearts();
 
         function toggleMusic() { return music.paused ? music.play() : music.pause(); }
 
-        function openEnvelope() {
-            document.getElementById('envelopeWrapper').style.display = 'none';
-            card.style.display = 'block';
-            music.play().catch(() => {});
-        }
-
         function moveNoButton() {
-            // First click: Stay put. Subsequent clicks: Run away.
-            if (noClickCount === 0) return; 
-            if (noClickCount >= 5) return;
-
-            noBtn.style.position = 'fixed';
+            // First one stays put. Subsequent ones move.
+            if (noClickCount === 0) return;
             
-            const padding = 50;
-            let randomX = Math.random() * (window.innerWidth - noBtn.offsetWidth - padding);
-            let randomY = Math.random() * (window.innerHeight - noBtn.offsetHeight - padding);
-
-            // Avoid covering the center card
-            const rect = card.getBoundingClientRect();
-            if (randomX > rect.left - 50 && randomX < rect.right + 50 &&
-                randomY > rect.top - 50 && randomY < rect.bottom + 50) {
-                randomX = 20; randomY = 20;
-            }
-
-            noBtn.style.left = randomX + 'px';
-            noBtn.style.top = randomY + 'px';
+            // Randomize position across the entire screen
+            const x = Math.random() * (window.innerWidth - noBtn.offsetWidth);
+            const y = Math.random() * (window.innerHeight - noBtn.offsetHeight);
+            
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = x + 'px';
+            noBtn.style.top = y + 'px';
         }
 
         function handleNo() {
             const img = document.getElementById('displayImg');
             const title = document.getElementById('questionText');
 
-            // After first "No", Yes button moves to absolute center of card
-            if (noClickCount === 0) {
-                yesBtn.style.transition = "all 0.5s ease";
-                // Moves Yes button to a more prominent centered spot
-            }
-
+            // Text and Image update
             if (noClickCount < messages.length) {
                 title.innerText = messages[noClickCount];
                 img.src = sadImages[noClickCount];
             }
 
+            // Size updates
             noScale -= 0.15;
-            yesScale += 0.4;
+            yesScale += 0.45;
             
             if (noClickCount >= 4) {
                 noBtn.style.display = 'none';
@@ -175,6 +168,7 @@
             } else {
                 noBtn.style.transform = `scale(${noScale})`;
                 yesBtn.style.transform = `scale(${yesScale})`;
+                // Immediately move it after clicking "No" so she can't click it twice in the same spot
                 moveNoButton();
             }
             
@@ -187,6 +181,7 @@
                 <img class="main-img" src="images/happy-1.jpeg">
                 <h1 style="font-size: 1.1rem; padding: 10px;">Congratulations!!! You've secured an all expenses paid valentines day with THIS GUY ❤️</h1>
             `;
+            // Trigger confetti
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         }
     </script>
